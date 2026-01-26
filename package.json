@@ -1,0 +1,10 @@
+{
+  "name": "amazon-affiliate-generator",
+  "version": "1.0.0",
+  "description": "Amazon affiliate link generator using Netlify Functions",
+  "main": "index.js",
+  "scripts": {
+    "start": "netlify dev"
+  },
+  "dependencies": {}
+}
