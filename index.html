@@ -84,6 +84,28 @@
     </div>
 
     <script>
+      const AFFILIATE_TAG = "blissofkundal-21";
+      const ASIN_RE = /\/(?:dp|gp\/product)\/([A-Z0-9]{10})/;
+      // Public CORS proxy, only used to expand short links (amzn.eu, amzn.to, a.co)
+      const PROXY = "https://api.allorigins.win/get?url=";
+
+      function fromUrl(u) {
+        const m = u.pathname.match(ASIN_RE);
+        return m ? { asin: m[1], host: u.hostname } : null;
+      }
+
+      async function expandShortLink(url) {
+        const res = await fetch(PROXY + encodeURIComponent(url));
+        if (!res.ok) throw new Error("Short link could not be expanded");
+        const { contents } = await res.json();
+        const canon = contents.match(
+          /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+        );
+        const found = canon && fromUrl(new URL(canon[1]));
+        if (!found) throw new Error("Could not extract ASIN from short link");
+        return found;
+      }
+
       async function generate() {
         const input = document.getElementById("urlInput").value.trim();
         const result = document.getElementById("result");
@@ -95,19 +117,14 @@
         }
 
         try {
-          const res = await fetch(
-            `/.netlify/functions/expand?url=${encodeURIComponent(input)}`,
-          );
+          const url = new URL(input);
+          let info = fromUrl(url);
+          if (!info) info = await expandShortLink(input);
 
-          if (!res.ok) {
-            throw new Error("Server returned an error");
-          }
-
-          const data = await res.json();
-
+          const link = `https://${info.host}/dp/${info.asin}?tag=${AFFILIATE_TAG}`;
           result.innerHTML = `
       <strong>Affiliate link:</strong><br>
-      <a href="${data.affiliateLink}" target="_blank">${data.affiliateLink}</a>
+      <a href="${link}" target="_blank" rel="noopener">${link}</a>
     `;
         } catch (err) {
           result.innerHTML = `<span class="error">Error: ${err.message}</span>`;
