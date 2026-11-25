@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Amazon Affiliate Link Generator</title>
     <style>
       body {
@@ -107,7 +108,7 @@
       }
 
       async function generate() {
-        const input = document.getElementById("urlInput").value.trim();
+        let input = document.getElementById("urlInput").value.trim();
         const result = document.getElementById("result");
         result.textContent = "Working…";
 
@@ -117,6 +118,7 @@
         }
 
         try {
+          if (!/^https?:\/\//i.test(input)) input = "https://" + input;
           const url = new URL(input);
           let info = fromUrl(url);
           if (!info) info = await expandShortLink(input);
